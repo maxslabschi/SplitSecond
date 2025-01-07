@@ -501,13 +501,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 1568794853}
   normalOffset: {x: 0, y: 1.5, z: 0}
-  sneakingOffset: {x: 0, y: 1.2, z: 0}
+  slidingOffset: {x: 0, y: 1, z: 0}
   mouseSensitivity: 100
   baseFOV: 75
   maxFOV: 100
   fovSpeedMultiplier: 0.25
   maxTiltAngle: 2.5
   tiltSpeed: 8
+  slideTiltAngle: 15
+  slideTiltSpeed: 5
 --- !u!1 &224144004
 GameObject:
   m_ObjectHideFlags: 0
@@ -1990,19 +1992,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   walkSpeed: 6
   sprintSpeed: 12
-  sneakSpeed: 3
   gravity: -9.81
   jumpHeight: 1.5
   airControlMultiplier: 8
   standingHeight: 2
-  sneakingHeight: 1
+  slidingHeight: 1
   heightTransitionSpeed: 8
   wallJumpForce: 5
   wallDetectionDistance: 1
   wallLayer:
     serializedVersion: 2
-    m_Bits: 132
+    m_Bits: 128
   wallJumpFriction: 5
+  slideSpeed: 14
+  maxSlideTime: 1
   fallThreshold: -10
   respawnPoint: {fileID: 1989256079}
 --- !u!1 &1719458078
