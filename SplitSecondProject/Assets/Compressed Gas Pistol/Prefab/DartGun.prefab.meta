@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 974fad82d4a08404dbfa202033ba74b5
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 10332
+  packageName: Compressed Gas Gun
+  packageVersion: 1.2
+  assetPath: Assets/Compressed Gas Pistol/Prefab/DartGun.prefab
+  uploadId: 28790
