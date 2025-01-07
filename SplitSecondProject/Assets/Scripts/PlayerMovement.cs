@@ -6,14 +6,13 @@ public class PlayerMovement : MonoBehaviour
     [Header("Movement Settings")]
     public float walkSpeed = 6f;
     public float sprintSpeed = 12f;
-    public float sneakSpeed = 3f;
     public float gravity = -9.81f;
     public float jumpHeight = 1.5f;
     public float airControlMultiplier = 8f; // Air control sensitivity for strafing
 
     [Header("Player Height Settings")]
     public float standingHeight = 2f;
-    public float sneakingHeight = 1f;
+    public float slidingHeight = 1f;  // Height when sliding
     public float heightTransitionSpeed = 8f;
 
     [Header("Wall Jump Settings")]
@@ -22,21 +21,29 @@ public class PlayerMovement : MonoBehaviour
     public LayerMask wallLayer;
     public float wallJumpFriction = 5f; // Friction applied to the wall jump direction
 
+    [Header("Sliding Settings")]
+    public float slideSpeed = 14f;      // Movement speed during slide
+    public float maxSlideTime = 1.0f;   // How long the slide lasts (in seconds)
+
     [Header("Respawn Settings")]
     public float fallThreshold = -10f;
     public Transform respawnPoint;
 
     private CharacterController controller;
     private Vector3 velocity;
-    private bool isSneaking = false;
     private bool isWallJumping = false;
+    private bool isSliding = false;     // Sliding state
 
     private float currentSpeed;
     private float targetHeight;
     private Vector3 wallJumpDirection = Vector3.zero;
 
-    public bool IsSneaking => isSneaking;
+    // Sliding timer
+    private float slideTimer;
+
+    // Public properties so other scripts (like the camera) can access
     public float CurrentSpeed => currentSpeed;
+    public bool IsSliding => isSliding;
 
     private void Start()
     {
@@ -57,101 +64,130 @@ public class PlayerMovement : MonoBehaviour
     {
         bool isGrounded = controller.isGrounded;
 
+        // If grounded, reset vertical velocity to keep the player on the ground
+        if (isGrounded && velocity.y < 0f)
+            velocity.y = -2f;
+
+        // Reset wall jump states when grounded
         if (isGrounded)
         {
-            if (velocity.y < 0)
-                velocity.y = -2f; // Ensure the player stays grounded
-
-            isWallJumping = false; // Reset wall jumping state when grounded
-            wallJumpDirection = Vector3.zero; // Reset wall jump direction
+            isWallJumping = false;
+            wallJumpDirection = Vector3.zero;
         }
 
-        // Movement input
+        // Read movement input
         float horizontal = Input.GetAxis("Horizontal");
         float vertical = Input.GetAxis("Vertical");
         Vector3 move = transform.right * horizontal + transform.forward * vertical;
 
-        if (isGrounded)
+        if (Input.GetKeyDown(KeyCode.C) && !isSliding && isGrounded && move.magnitude > 0.1f && currentSpeed == sprintSpeed)
         {
-            // Sneaking
-            if (Input.GetKey(KeyCode.C))
-            {
-                isSneaking = true;
-                currentSpeed = sneakSpeed;
-                targetHeight = sneakingHeight;
-            }
-            // Walking or Sprinting
-            else if (Input.GetKey(KeyCode.LeftShift))
-            {
-                isSneaking = false;
-                currentSpeed = sprintSpeed;
-                targetHeight = standingHeight;
-            }
-            else
-            {
-                isSneaking = false;
-                currentSpeed = walkSpeed;
-                targetHeight = standingHeight;
-            }
+            StartSlide();
+        }
 
-            // Apply standard movement when grounded
-            controller.Move(move * currentSpeed * Time.deltaTime);
+        if ((Input.GetKeyUp(KeyCode.C) && isSliding) || (isSliding && slideTimer <= 0f))
+        {
+            EndSlide();
+        }
+
+        // If sliding, override movement
+        if (isSliding)
+        {
+            slideTimer -= Time.deltaTime;
+            controller.Move(move.normalized * slideSpeed * Time.deltaTime);
         }
         else
         {
-            // Allow air control for strafing
-            Vector3 airMove = move * airControlMultiplier;
-            controller.Move(airMove * Time.deltaTime);
+            // Normal ground movement
+            if (isGrounded)
+            {
+                // Sprint if holding left shift and moving
+                if (Input.GetKey(KeyCode.LeftShift) && move.magnitude > 0.1f)
+                {
+                    currentSpeed = sprintSpeed;
+                    targetHeight = standingHeight;
+                }
+                else
+                {
+                    // Otherwise walk
+                    currentSpeed = walkSpeed;
+                    targetHeight = standingHeight;
+                }
+
+                controller.Move(move * currentSpeed * Time.deltaTime);
+            }
+            else
+            {
+                // Air control (reduced responsiveness in the air)
+                Vector3 airMove = move * airControlMultiplier;
+                controller.Move(airMove * Time.deltaTime);
+            }
         }
 
-        // Wall Jump Check
+        // Wall Jump check
         if (!isGrounded && Input.GetButtonDown("Jump") && IsNearWall())
         {
             PerformWallJump();
         }
-        else if (Input.GetButtonDown("Jump") && isGrounded)
+        else if (Input.GetButtonDown("Jump") && isGrounded && !isSliding)
         {
-            // Normal Jump
+            // Normal jump (only if not sliding)
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
         }
 
         // Apply gravity
         velocity.y += gravity * Time.deltaTime;
-
-        // Apply gravity or wall jump velocity
         controller.Move(velocity * Time.deltaTime);
     }
 
-    private void PerformWallJump()
+    private void StartSlide()
     {
-        // Push the player away from the wall
-        Vector3 wallNormal = GetWallNormal();
-        if (wallNormal != Vector3.zero)
-        {
-            // Set velocity for wall jump and apply a directional force
-            wallJumpDirection = wallNormal * wallJumpForce;
-            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        isSliding = true;
+        slideTimer = maxSlideTime;
 
-            isWallJumping = true;
-        }
+        // Change player height
+        targetHeight = slidingHeight;
+
+        // Force the player a bit downward so they stay on the ground
+        velocity.y = -2f;
+    }
+
+    private void EndSlide()
+    {
+        isSliding = false;
+        targetHeight = standingHeight;
     }
 
     private bool IsNearWall()
     {
-        // Check for walls in front, left, and right
+        // Check for walls in front, right, left
         return Physics.Raycast(transform.position, transform.forward, wallDetectionDistance, wallLayer) ||
                Physics.Raycast(transform.position, transform.right, wallDetectionDistance, wallLayer) ||
                Physics.Raycast(transform.position, -transform.right, wallDetectionDistance, wallLayer);
     }
 
+    private void PerformWallJump()
+    {
+        Vector3 wallNormal = GetWallNormal();
+        if (wallNormal != Vector3.zero)
+        {
+            // Push the player away from the wall
+            wallJumpDirection = wallNormal * wallJumpForce;
+            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            isWallJumping = true;
+        }
+    }
+
     private Vector3 GetWallNormal()
     {
-        // Raycast to detect walls and return the wall normal
         RaycastHit hit;
+        // Check forward
         if (Physics.Raycast(transform.position, transform.forward, out hit, wallDetectionDistance, wallLayer))
             return hit.normal;
+        // Check right
         if (Physics.Raycast(transform.position, transform.right, out hit, wallDetectionDistance, wallLayer))
             return hit.normal;
+        // Check left
         if (Physics.Raycast(transform.position, -transform.right, out hit, wallDetectionDistance, wallLayer))
             return hit.normal;
 
@@ -165,10 +201,10 @@ public class PlayerMovement : MonoBehaviour
             // Gradually reduce wall jump direction velocity
             wallJumpDirection = Vector3.Lerp(wallJumpDirection, Vector3.zero, Time.deltaTime * wallJumpFriction);
 
-            // Apply the reduced velocity to the controller
+            // Apply that velocity to the character
             controller.Move(wallJumpDirection * Time.deltaTime);
 
-            // Stop wall jump if the direction velocity is negligible
+            // Stop wall jumping if negligible
             if (wallJumpDirection.magnitude < 0.1f)
             {
                 wallJumpDirection = Vector3.zero;
@@ -200,6 +236,7 @@ public class PlayerMovement : MonoBehaviour
             controller.enabled = false;
             transform.position = respawnPoint.position;
             controller.enabled = true;
+
             velocity = Vector3.zero;
             wallJumpDirection = Vector3.zero;
             isWallJumping = false;
