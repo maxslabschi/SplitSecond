@@ -48,12 +48,3 @@ public class GrapplingHook : MonoBehaviour
         lineRenderer.enabled = false;
     }
 }
-
-
-/*
-Hook To:
-Attach this script to the Grapple Gun GameObject.
-Drag the GunTip, Camera, and Player references to their respective fields.
-Assign a LineRenderer component to the Grapple Gun and link it to the lineRenderer field.
-Set the grappleableMask to the layer for grapple points (e.g., "GrapplePoint").
-*/

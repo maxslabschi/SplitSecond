@@ -5,7 +5,7 @@ public class WallJump : MonoBehaviour
     public float wallJumpForce = 5f;
     public LayerMask wallMask;
     public Transform wallCheck;
-    public float wallDistance = 0.5f;
+    public float wallDistance = 2f;
 
     private bool isTouchingWall;
     private Vector3 velocity;
@@ -26,11 +26,3 @@ public class WallJump : MonoBehaviour
         }
     }
 }
-
-/*
-Hook To:
-Attach this script to the Player GameObject.
-Create an empty child named WallCheck and position it at the edge of the player where walls might be.
-Assign WallCheck to the wallCheck field.
-Set the wallMask to the appropriate layer for walls (e.g., "Wall").
-*/
