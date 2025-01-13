@@ -26,6 +26,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("Sliding Settings")]
     public float slideSpeed = 14f;
     public float maxSlideTime = 1.0f;
+    public float slideSpeedboost = 1f;
 
     [Header("Respawn Settings")]
     public float fallThreshold = -10f;
@@ -82,7 +83,7 @@ public class PlayerMovement : MonoBehaviour
         if (isSliding)
         {
             slideTimer -= Time.deltaTime;
-            controller.Move(move.normalized * slideSpeed * Time.deltaTime);
+            controller.Move(move.normalized * slideSpeed * Time.deltaTime * slideSpeedboost);
         }
         else
         {
