@@ -2005,6 +2005,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   wallJumpFriction: 5
+  cooldownTime: 1
   slideSpeed: 14
   maxSlideTime: 1
   fallThreshold: -10

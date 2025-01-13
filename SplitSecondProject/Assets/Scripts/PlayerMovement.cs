@@ -20,6 +20,8 @@ public class PlayerMovement : MonoBehaviour
     public float wallDetectionDistance = 1f;
     public LayerMask wallLayer;
     public float wallJumpFriction = 5f;
+    [SerializeField] private float cooldownTime;
+    private float nextJumpTime;
 
     [Header("Sliding Settings")]
     public float slideSpeed = 14f;
@@ -37,6 +39,9 @@ public class PlayerMovement : MonoBehaviour
     private float targetHeight;
     private Vector3 wallJumpDirection;
     private float slideTimer;
+
+    public bool IsCoolingDown => Time.time > nextJumpTime;
+    public void StartCooldown() => nextJumpTime = Time.time + cooldownTime;
 
     public float CurrentSpeed => currentSpeed;
     public bool IsSliding => isSliding;
@@ -102,7 +107,11 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        if (!isGrounded && Input.GetButtonDown("Jump") && IsNearWall()) PerformWallJump();
+        if (IsCoolingDown && !isGrounded && Input.GetButtonDown("Jump") && IsNearWall())
+        {
+            PerformWallJump();
+            StartCooldown();
+        }
         else if (Input.GetButtonDown("Jump") && isGrounded && !isSliding) velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
 
         velocity.y += gravity * Time.deltaTime;
