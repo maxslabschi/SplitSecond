@@ -9,6 +9,8 @@ public class PlayerMovement : MonoBehaviour
     public float gravity = -9.81f;
     public float jumpHeight = 1.5f;
     public float airControlMultiplier = 8f;
+    public float airControlForce = 2f;
+    public float verticalVelocityLimit = -40f;
 
     [Header("Player Height Settings")]
     public float standingHeight = 2f;
@@ -32,20 +34,43 @@ public class PlayerMovement : MonoBehaviour
     public float fallThreshold = -10f;
     public Transform respawnPoint;
 
+    [Header("Momentum Settings")]
+    public float groundedDrag = 5f;
+    public float airDrag = 0.3f;
+    public float initialDragMultiplier = 0.5f;
+    public float maxMomentumSpeed = 20f;
+
     private CharacterController controller;
     private Vector3 velocity;
+    private Vector3 externalVelocity;
     private bool isWallJumping;
     private bool isSliding;
     private float currentSpeed;
     private float targetHeight;
     private Vector3 wallJumpDirection;
     private float slideTimer;
+    private float velocityFalloff;
 
     public bool IsCoolingDown => Time.time > nextJumpTime;
     public void StartCooldown() => nextJumpTime = Time.time + cooldownTime;
 
     public float CurrentSpeed => currentSpeed;
     public bool IsSliding => isSliding;
+
+    public Vector3 GetCurrentVelocity()
+    {
+        return velocity + externalVelocity;
+    }
+
+    public void SetExternalVelocity(Vector3 newVelocity)
+    {
+        externalVelocity = newVelocity;
+        if (externalVelocity.magnitude > maxMomentumSpeed)
+        {
+            externalVelocity = externalVelocity.normalized * maxMomentumSpeed;
+        }
+        velocityFalloff = 0f;
+    }
 
     void Start()
     {
@@ -65,12 +90,27 @@ public class PlayerMovement : MonoBehaviour
     void HandleMovement()
     {
         bool isGrounded = controller.isGrounded;
-        if (isGrounded && velocity.y < 0f) velocity.y = -2f;
+        if (isGrounded && velocity.y < 0f)
+        {
+            velocity.y = -2f;
+            externalVelocity.y = 0;
+        }
 
         if (isGrounded)
         {
             isWallJumping = false;
             wallJumpDirection = Vector3.zero;
+            float currentDrag = velocityFalloff < 0.3f ? groundedDrag * initialDragMultiplier : groundedDrag;
+            externalVelocity = Vector3.Lerp(externalVelocity, Vector3.zero, Time.deltaTime * currentDrag);
+            velocityFalloff += Time.deltaTime;
+        }
+        else
+        {
+            Vector3 horizontalVelocity = new Vector3(externalVelocity.x, 0, externalVelocity.z);
+            Vector3 verticalVelocity = new Vector3(0, externalVelocity.y, 0);
+            
+            horizontalVelocity = Vector3.Lerp(horizontalVelocity, Vector3.zero, Time.deltaTime * airDrag);
+            externalVelocity = horizontalVelocity + verticalVelocity;
         }
 
         float horizontal = Input.GetAxis("Horizontal");
@@ -104,6 +144,11 @@ public class PlayerMovement : MonoBehaviour
             else
             {
                 Vector3 airMove = move * airControlMultiplier;
+                if (!isGrounded)
+                {
+                    Vector3 additionalAirControl = (transform.right * horizontal + transform.forward * vertical) * airControlForce;
+                    externalVelocity += additionalAirControl * Time.deltaTime;
+                }
                 controller.Move(airMove * Time.deltaTime);
             }
         }
@@ -113,10 +158,15 @@ public class PlayerMovement : MonoBehaviour
             PerformWallJump();
             StartCooldown();
         }
-        else if (Input.GetButtonDown("Jump") && isGrounded && !isSliding) velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        else if (Input.GetButtonDown("Jump") && isGrounded && !isSliding) 
+        {
+            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        }
 
         velocity.y += gravity * Time.deltaTime;
-        controller.Move(velocity * Time.deltaTime);
+        velocity.y = Mathf.Max(velocity.y, verticalVelocityLimit);
+
+        controller.Move((velocity + externalVelocity) * Time.deltaTime);
     }
 
     void StartSlide()
@@ -194,8 +244,10 @@ public class PlayerMovement : MonoBehaviour
             transform.position = respawnPoint.position;
             controller.enabled = true;
             velocity = Vector3.zero;
+            externalVelocity = Vector3.zero;
             wallJumpDirection = Vector3.zero;
             isWallJumping = false;
+            velocityFalloff = 0f;
             Debug.Log("Player respawned.");
         }
         else
