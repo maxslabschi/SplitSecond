@@ -2,11 +2,11 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/splitsecond/db"
 	"github.com/splitsecond/model"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -24,15 +24,14 @@ func createScore(w http.ResponseWriter, r *http.Request) {
 
 	data := &model.ScoreCreateRequest{}
 	if err := render.Bind(r, data); err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		render.Render(w, r, ErrInvalidRequest(err))
 		return
 	}
 
 	score, err := db.CreateScore(r.Context().Value("levelId").(string), data)
 	if err != nil {
-		fmt.Println(err)
-		// TODO: internal server error
+		log.Println(err)
 		render.Render(w, r, ErrInvalidRequest(err))
 		return
 	}
@@ -56,8 +55,8 @@ func getScores(w http.ResponseWriter, r *http.Request) {
 
 	data, err := db.GetScores(r.Context().Value("levelId").(string), limit)
 	if err != nil {
-		fmt.Println(err)
-		render.Render(w, r, ErrInvalidRequest(err))
+		log.Println(err)
+		render.Render(w, r, ErrInternalServerError(err))
 		return
 	}
 	renderers := make([]render.Renderer, len(data))
