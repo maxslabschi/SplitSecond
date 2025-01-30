@@ -1,0 +1,8 @@
+POST localhost:8080/level/mytest
+Accept: application/json
+Content-Type: application/json
+
+{
+    "username": "Testing",
+    "time": 11370
+}
