@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
@@ -26,9 +27,9 @@ public class PlayerMovement : MonoBehaviour
     private float nextJumpTime;
 
     [Header("Sliding Settings")]
-    public float slideSpeed = 14f;
+    public float slideSpeed = 24f;
     public float maxSlideTime = 1.0f;
-    public float slideSpeedboost = 1f;
+    public float slideSpeedboost = 30f;
 
     [Header("Respawn Settings")]
     public float fallThreshold = -10f;
@@ -117,13 +118,13 @@ public class PlayerMovement : MonoBehaviour
         float vertical = Input.GetAxis("Vertical");
         Vector3 move = transform.right * horizontal + transform.forward * vertical;
 
-        if (Input.GetKeyDown(KeyCode.C) && !isSliding && isGrounded && move.magnitude > 0.1f && currentSpeed == sprintSpeed) StartSlide();
+        if (Input.GetKey(KeyCode.C) && !isSliding && move.magnitude > 0.1f && isGrounded) StartSlide();
         if ((Input.GetKeyUp(KeyCode.C) && isSliding) || (isSliding && slideTimer <= 0f)) EndSlide();
 
         if (isSliding)
         {
             slideTimer -= Time.deltaTime;
-            controller.Move(move.normalized * slideSpeed * Time.deltaTime * slideSpeedboost);
+            controller.Move(move.normalized * (slideSpeed * Time.deltaTime * slideSpeedboost * Math.Max(slideTimer, 0.2f)));
         }
         else
         {
@@ -158,7 +159,7 @@ public class PlayerMovement : MonoBehaviour
             PerformWallJump();
             StartCooldown();
         }
-        else if (Input.GetButtonDown("Jump") && isGrounded && !isSliding) 
+        else if (Input.GetButtonDown("Jump") && isGrounded) 
         {
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
         }
