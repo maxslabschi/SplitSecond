@@ -7,18 +7,19 @@ import (
 
 type Score struct {
 	Username string `json:"username"`
-	// milliseconds
-	Time int64     `json:"time"`
+	// time in seconds
+	Time float64   `json:"time"`
 	Date time.Time `json:"date"`
 }
 
-func (rd *Score) Render(w http.ResponseWriter, r *http.Request) error {
+func (rd Score) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
 type ScoreCreateRequest struct {
 	Username string `json:"username"`
-	Time     int64  `json:"time"`
+	// time in seconds
+	Time float64 `json:"time"`
 }
 
 func (a *ScoreCreateRequest) Bind(r *http.Request) error {

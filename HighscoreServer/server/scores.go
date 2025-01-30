@@ -8,12 +8,14 @@ import (
 	"github.com/splitsecond/db"
 	"github.com/splitsecond/model"
 	"net/http"
+	"strconv"
 )
 
 func ScoreRouter(r chi.Router) {
-	r.Route("/{levelId}", func(r chi.Router) {
+	r.Route("/{levelId}/scores", func(r chi.Router) {
 		r.Use(LevelCtx)
 		r.Post("/", createScore)
+		r.Get("/", getScores)
 	})
 }
 
@@ -37,6 +39,32 @@ func createScore(w http.ResponseWriter, r *http.Request) {
 
 	render.Render(w, r, score)
 	return
+}
+
+func getScores(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	limitStr := r.URL.Query().Get("limit")
+	if limitStr == "" {
+		limitStr = "100"
+	}
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil {
+		render.Render(w, r, ErrInvalidRequest(err))
+		return
+	}
+
+	data, err := db.GetScores(r.Context().Value("levelId").(string), limit)
+	if err != nil {
+		fmt.Println(err)
+		render.Render(w, r, ErrInvalidRequest(err))
+		return
+	}
+	renderers := make([]render.Renderer, len(data))
+	for i, score := range data {
+		renderers[i] = score
+	}
+	render.RenderList(w, r, renderers)
 }
 
 func LevelCtx(next http.Handler) http.Handler {

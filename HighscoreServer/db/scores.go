@@ -24,3 +24,21 @@ func CreateScore(level string, scoreCreate *model.ScoreCreateRequest) (*model.Sc
 
 	return &score, err
 }
+
+func GetScores(level string, limit int) ([]model.Score, error) {
+	rows, err := db.Query("SELECT username, time, date FROM scores WHERE level=? ORDER BY time LIMIT ?", level, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	scoreList := make([]model.Score, 0)
+	for rows.Next() {
+		score := &model.Score{}
+		err := rows.Scan(&score.Username, &score.Time, &score.Date)
+		if err != nil {
+			return nil, err
+		}
+		scoreList = append(scoreList, *score)
+	}
+	return scoreList, nil
+}

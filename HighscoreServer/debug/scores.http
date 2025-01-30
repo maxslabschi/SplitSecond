@@ -1,8 +1,14 @@
-POST localhost:8080/level/mytest
+POST localhost:8080/level/mytest/scores
 Accept: application/json
 Content-Type: application/json
 
 {
     "username": "Testing",
-    "time": 11370
+    "time": 29.6969
 }
+
+###
+
+GET localhost:8080/level/mytest/scores
+Accept: application/json
+Content-Type: application/json

@@ -3,14 +3,15 @@ package main
 import (
 	"github.com/splitsecond/db"
 	"github.com/splitsecond/server"
+	"log"
 )
 
 func main() {
 	db.ConnectToDatabase()
-	println("Connected")
+	log.Println("Opened DB")
 	err := server.StartServer()
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
-	println("Goodbye!")
+	log.Println("Goodbye!")
 }
