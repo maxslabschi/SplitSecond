@@ -4705,6 +4705,7 @@ MonoBehaviour:
   airDrag: 0.3
   initialDragMultiplier: 0.5
   maxMomentumSpeed: 20
+  timer: {fileID: 104325239}
 --- !u!143 &1460820605
 CharacterController:
   m_ObjectHideFlags: 0

@@ -19,5 +19,9 @@ public class Timer : MonoBehaviour
         return elapsedTime;
     }
 
+    public void resetTimer()
+    {
+        elapsedTime = 0;
+    }
     
 }

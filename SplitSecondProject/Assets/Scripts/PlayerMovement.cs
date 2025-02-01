@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour
@@ -39,6 +40,9 @@ public class PlayerMovement : MonoBehaviour
     public float airDrag = 0.3f;
     public float initialDragMultiplier = 0.5f;
     public float maxMomentumSpeed = 20f;
+
+    [Header("Timer")]
+    public Timer timer;
 
     private CharacterController controller;
     private Vector3 velocity;
@@ -85,6 +89,7 @@ public class PlayerMovement : MonoBehaviour
         ApplyWallJumpFriction();
         AdjustHeight();
         CheckFallAndRespawn();
+        checkIfReset();
     }
 
     void HandleMovement()
@@ -253,6 +258,14 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             Debug.LogError("Respawn Point not set!");
+        }
+    }
+
+    void checkIfReset()
+    {
+        if(Input.GetKeyDown(KeyCode.R)) {
+            Respawn();
+            timer.resetTimer();
         }
     }
 }
