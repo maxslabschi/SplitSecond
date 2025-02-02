@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour
@@ -81,6 +82,7 @@ public class PlayerMovement : MonoBehaviour
         controller = GetComponent<CharacterController>();
         targetHeight = standingHeight;
         currentSpeed = walkSpeed;
+        
     }
 
     void Update()
@@ -90,6 +92,7 @@ public class PlayerMovement : MonoBehaviour
         AdjustHeight();
         CheckFallAndRespawn();
         checkIfReset();
+        switchLevel();
     }
 
     void HandleMovement()
@@ -266,6 +269,14 @@ public class PlayerMovement : MonoBehaviour
         if(Input.GetKeyDown(KeyCode.R)) {
             Respawn();
             timer.resetTimer();
+        }
+    }
+
+    void switchLevel()
+    {
+        if(Input.GetKeyDown(KeyCode.Escape)) {
+            //SceneManager.LoadScene("SwitchLevel", LoadSceneMode.Single);
+
         }
     }
 }
