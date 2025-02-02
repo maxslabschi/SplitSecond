@@ -20,12 +20,14 @@ public class PauseGame : MonoBehaviour
             {
                 canvasObj.SetActive(false); // hide the menu
                 Cursor.lockState = CursorLockMode.Locked; // hide cursor
+                Cursor.visible = false; // Hide cursor
                 Time.timeScale=1;    // unfreeze time
             }
             else
             {
                 canvasObj.SetActive(true); // show the menu
                 Cursor.lockState = CursorLockMode.None; // show cursor
+                Cursor.visible = true; // Show cursor
                 Time.timeScale=0;    // freeze time
             }
         }
