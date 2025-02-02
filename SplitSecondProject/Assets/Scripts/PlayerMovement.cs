@@ -82,7 +82,7 @@ public class PlayerMovement : MonoBehaviour
         controller = GetComponent<CharacterController>();
         targetHeight = standingHeight;
         currentSpeed = walkSpeed;
-        
+        Time.timeScale=1;
     }
 
     void Update()
